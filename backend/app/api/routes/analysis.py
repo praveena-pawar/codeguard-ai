@@ -4,10 +4,11 @@ from app.schemas.analysis import AnalysisRequest
 from app.services.ai_fix_service import generate_fix
 from app.services.ai_service import explain_issue
 from app.services.analyzer import analyze_code
-from app.services.fix_validator import validate_fix
 from app.services.quality_scorer import calculate_score
 from app.services.test_generator import generate_tests
 from app.services.test_runner import run_tests
+from app.services.fix_validator import validate_fix
+
 
 router = APIRouter()
 
@@ -17,12 +18,9 @@ def analyze(request: AnalysisRequest):
     # 1. Analyze the submitted code
     issues = analyze_code(request.code)
 
-    # 2. Calculate initial quality score
-    before_score = calculate_score(issues)
-
     results = []
 
-    # 3. Explain every detected issue
+    # 2. Explain every detected issue
     for issue in issues:
         issue_data = {
             "rule": issue.rule,
@@ -40,19 +38,29 @@ def analyze(request: AnalysisRequest):
 
         results.append(issue_data)
 
-    # 4. Generate tests
-    test_code = generate_tests(request.code)
+    # 3. Generate tests based on the detected issues
+    test_code = generate_tests(
+        request.code,
+        results,
+    )
 
-    # 5. Run generated tests against original code
+    # 4. Run generated tests against the original code
     original_test_result = run_tests(
         source_code=request.code,
         test_code=test_code,
     )
 
-    # 6. Generate a fix if issues were found
+    # 5. Calculate the BEFORE quality score
+    before_score = calculate_score(
+        issues,
+        tests_passed=original_test_result["passed"],
+    )
+
+    # 6. Default values
     fixed_code = request.code
     fixed_test_result = original_test_result
 
+    # 7. Generate a fix if issues were found
     if issues:
         first_issue = results[0]
 
@@ -61,18 +69,23 @@ def analyze(request: AnalysisRequest):
             first_issue,
         )
 
-        # 7. Validate the generated fix
+        # 8. Validate the generated fix
         fixed_test_result = validate_fix(
             fixed_code=fixed_code,
             test_code=test_code,
         )
 
-    # 8. Re-analyze the fixed code
+    # 9. Re-analyze the fixed code
     fixed_issues = analyze_code(fixed_code)
 
-    # 9. Calculate final quality score
-    after_score = calculate_score(fixed_issues)
+    # 10. Calculate the AFTER quality score
+    after_score = calculate_score(
+        fixed_issues,
+        tests_passed=fixed_test_result["passed"],
+        fix_validated=fixed_test_result["passed"],
+    )
 
+    # 11. Return the complete analysis result
     return {
         "issues": results,
         "before_score": before_score,

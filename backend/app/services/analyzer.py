@@ -16,12 +16,38 @@ class CodeAnalyzer(ast.NodeVisitor):
     def __init__(self):
         self.issues: list[CodeIssue] = []
         self.guarded_denominators: set[str] = set()
+        self.function_parameters: set[str] = set()
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         previous_guards = self.guarded_denominators.copy()
+        previous_parameters = self.function_parameters.copy()
 
         self.guarded_denominators = set()
 
+        self.function_parameters = {
+            argument.arg
+            for argument in node.args.args
+        }
+
+        # Detect mutable default arguments
+        for argument, default in zip(
+            node.args.args[-len(node.args.defaults):],
+            node.args.defaults,
+        ):
+            if isinstance(default, (ast.List, ast.Dict, ast.Set)):
+                self.issues.append(
+                    CodeIssue(
+                        rule="MUTABLE_DEFAULT",
+                        message=(
+                            f"Mutable default argument '{argument.arg}' "
+                            "can be shared between function calls."
+                        ),
+                        line=default.lineno,
+                        severity="warning",
+                    )
+                )
+
+        # Collect zero guards before analyzing divisions
         for statement in node.body:
             if isinstance(statement, ast.If):
                 self._collect_zero_guards(statement)
@@ -30,11 +56,36 @@ class CodeAnalyzer(ast.NodeVisitor):
             self.visit(statement)
 
         self.guarded_denominators = previous_guards
+        self.function_parameters = previous_parameters
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
         previous_guards = self.guarded_denominators.copy()
+        previous_parameters = self.function_parameters.copy()
 
         self.guarded_denominators = set()
+
+        self.function_parameters = {
+            argument.arg
+            for argument in node.args.args
+        }
+
+        # Detect mutable default arguments
+        for argument, default in zip(
+            node.args.args[-len(node.args.defaults):],
+            node.args.defaults,
+        ):
+            if isinstance(default, (ast.List, ast.Dict, ast.Set)):
+                self.issues.append(
+                    CodeIssue(
+                        rule="MUTABLE_DEFAULT",
+                        message=(
+                            f"Mutable default argument '{argument.arg}' "
+                            "can be shared between function calls."
+                        ),
+                        line=default.lineno,
+                        severity="warning",
+                    )
+                )
 
         for statement in node.body:
             if isinstance(statement, ast.If):
@@ -44,6 +95,7 @@ class CodeAnalyzer(ast.NodeVisitor):
             self.visit(statement)
 
         self.guarded_denominators = previous_guards
+        self.function_parameters = previous_parameters
 
     def _collect_zero_guards(self, node: ast.If):
         test = node.test
@@ -95,6 +147,36 @@ class CodeAnalyzer(ast.NodeVisitor):
                         message=(
                             "Division operation detected. "
                             "Make sure the denominator cannot be zero."
+                        ),
+                        line=node.lineno,
+                        severity="warning",
+                    )
+                )
+
+        self.generic_visit(node)
+
+    def visit_Subscript(self, node: ast.Subscript):
+        """
+        Detect potentially unsafe dictionary-style lookups such as:
+
+            def get_user(users, user_id):
+                return users[user_id]
+
+        This is intentionally a heuristic because Python's [] operator
+        can also be used safely with lists, tuples, and other containers.
+        """
+
+        if isinstance(node.value, ast.Name):
+            container_name = node.value.id
+
+            if container_name in self.function_parameters:
+                self.issues.append(
+                    CodeIssue(
+                        rule="KEY_ERROR",
+                        message=(
+                            f"Lookup '{container_name}[...]' may raise "
+                            "KeyError when the requested key does not exist. "
+                            "Handle missing keys explicitly."
                         ),
                         line=node.lineno,
                         severity="warning",
