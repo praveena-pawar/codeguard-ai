@@ -11,8 +11,14 @@ You are an expert Python testing engineer.
 
 Generate pytest tests for the following Python code.
 
-CODE:
+SOURCE CODE:
 {code}
+
+Important:
+- The source code will be saved as `solution.py`.
+- The tests will be saved as `test_solution.py`.
+- Import the functions or classes under test from `solution`.
+- Do NOT redefine the source functions/classes inside the test file.
 
 Requirements:
 1. Use pytest.

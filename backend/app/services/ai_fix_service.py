@@ -23,10 +23,12 @@ Severity: {issue["severity"]}
 Requirements:
 1. Fix the identified issue.
 2. Preserve the original behavior wherever possible.
-3. Return ONLY the complete fixed Python code.
-4. Do not include markdown fences.
-5. Do not include explanations.
-6. Make sure the returned code is valid Python.
+3. Preserve existing exception types and function behavior unless the issue explicitly requires changing them.
+4. The generated fix must remain compatible with expected existing behavior.
+5. Return ONLY the complete fixed Python code.
+6. Do not include markdown fences.
+7. Do not include explanations.
+8. Make sure the returned code is valid Python.
 """
 
     response = client.chat.completions.create(
