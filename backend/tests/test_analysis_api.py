@@ -51,3 +51,22 @@ def test_analysis_valid_code():
     data = response.json()
 
     assert data["issues"] == []
+
+
+
+
+def test_analysis_includes_ai_explanation():
+    response = client.post(
+        "/analysis",
+        json={
+            "code": "def divide(a, b):\n    return a / b"
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data["issues"]) == 1
+    assert "explanation" in data["issues"][0]
+    assert data["issues"][0]["explanation"]
