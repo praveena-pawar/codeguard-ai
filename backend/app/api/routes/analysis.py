@@ -3,7 +3,6 @@ from fastapi import APIRouter
 from app.schemas.analysis import AnalysisRequest
 from app.services.analyzer import analyze_code
 
-
 router = APIRouter()
 
 

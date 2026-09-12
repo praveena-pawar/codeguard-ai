@@ -1,6 +1,8 @@
 import ast
 from dataclasses import dataclass
 
+from app.services.ruff_service import run_ruff
+
 
 @dataclass
 class CodeIssue:
@@ -43,5 +45,17 @@ def analyze_code(code: str) -> list[CodeIssue]:
 
     analyzer = CodeAnalyzer()
     analyzer.visit(tree)
+
+    ruff_issues = run_ruff(code)
+
+    for issue in ruff_issues:
+        analyzer.issues.append(
+            CodeIssue(
+                rule=issue["code"],
+                message=issue["message"],
+                line=issue["location"]["row"],
+                severity=issue["severity"],
+            )
+        )
 
     return analyzer.issues
