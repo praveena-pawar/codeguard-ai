@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.services.database import create_project, create_analysis, create_issue, create_test_run, create_fix
 
 from app.schemas.analysis import AnalysisRequest
 from app.services.ai_fix_service import generate_fix
@@ -11,6 +12,7 @@ from app.services.fix_validator import validate_fix
 
 
 router = APIRouter()
+
 
 
 @router.post("/analysis")
@@ -85,6 +87,51 @@ def analyze(request: AnalysisRequest):
         fix_validated=fixed_test_result["passed"],
     )
 
+    project = create_project("CodeGuard Demo")
+
+    analysis = create_analysis(
+        project_id=project["id"],
+        code=request.code,
+        before_score=before_score,
+        after_score=after_score,
+    )
+
+
+    for issue in results:
+        create_issue(
+            analysis_id=analysis["id"],
+            rule=issue["rule"],
+            message=issue["message"],
+            line=issue["line"],
+            severity=issue["severity"],
+            explanation=issue["explanation"],
+        )
+
+
+    create_test_run(
+        analysis_id=analysis["id"],
+        test_code=test_code,
+        original_passed=original_test_result["passed"],
+        original_output=(
+            original_test_result["stdout"]
+            + original_test_result["stderr"]
+        ),
+        fixed_passed=fixed_test_result["passed"],
+        fixed_output=(
+            fixed_test_result["stdout"]
+            + fixed_test_result["stderr"]
+        ),
+    )
+
+    create_fix(
+        analysis_id=analysis["id"],
+        fixed_code=fixed_code,
+        validated=fixed_test_result["passed"],
+    )
+
+
+
+
     # 11. Return the complete analysis result
     return {
         "issues": results,
@@ -100,3 +147,5 @@ def analyze(request: AnalysisRequest):
         },
         "after_score": after_score,
     }
+
+

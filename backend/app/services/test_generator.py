@@ -29,14 +29,28 @@ IMPORTANT:
 - Tests must fail against the original buggy implementation when testing the
   detected bug.
 
+  
 Requirements:
 1. Use pytest.
-2. Test normal behavior.
-3. Test important edge cases.
-4. Write at least one test for every detected issue.
-5. Return ONLY valid Python test code.
-6. Do not include markdown fences.
-7. Do not include explanations.
+2. Test behavior that is directly supported by the source code and detected issue.
+3. Test normal/expected behavior.
+4. Test important edge cases related to the detected issue.
+5. Do not invent new business requirements or change the intended API behavior.
+6. Do not assert that a previously returned mutable object remains unchanged after the same object is intentionally mutated later.
+7. For a DIVISION issue, test division by zero using:
+       with pytest.raises(ValueError):
+           function_name(..., 0)
+8. For a MUTABLE_DEFAULT issue, verify that separate calls using the default
+   argument receive independent list/dict/set objects.
+9. For a KEY_ERROR issue, test the missing-key behavior that the generated fix
+   is expected to implement.
+10. For subprocess/security issues, do not assume a specific exception type
+    unless the source code or issue clearly requires it.
+11. Return ONLY valid Python test code.
+12. Do not include markdown fences.
+13. Do not include explanations.
+
+
 
 DIVISION ISSUE:
 If the issue rule is DIVISION:

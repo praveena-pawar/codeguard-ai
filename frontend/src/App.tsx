@@ -81,6 +81,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [error, setError] = useState("");
+  
 
 const analyzeCode = async () => {
   setLoading(true);
@@ -169,6 +170,8 @@ const analyzeCode = async () => {
 
         {/* TOP SECTION */}
         <div className="grid gap-6 lg:grid-cols-2">
+
+
           {/* SOURCE CODE */}
           <section className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-800 px-5 py-3">
@@ -197,6 +200,7 @@ const analyzeCode = async () => {
               }}
             />
           </section>
+          
 
 
 
@@ -325,9 +329,10 @@ const analyzeCode = async () => {
                         {result.before_score}
                       </p>
 
-                      <p className="mt-1 text-xs text-red-400">
-                        Issues detected
+                      <p className="mt-1 text-xs text-slate-500">
+                        Initial quality
                       </p>
+
                     </div>
 
                     <div className="flex flex-col items-center justify-center rounded-lg border border-green-900 bg-green-950/20 p-4 text-center">
@@ -342,6 +347,7 @@ const analyzeCode = async () => {
                       <p className="mt-1 text-xs text-green-400">
                         Quality gained
                       </p>
+
                     </div>
 
                     <div className="rounded-lg border border-cyan-900 bg-cyan-950/20 p-4">
@@ -353,9 +359,18 @@ const analyzeCode = async () => {
                         {result.after_score}
                       </p>
 
-                      <p className="mt-1 text-xs text-green-400">
-                        Fix validated
+                      <p
+                        className={`mt-1 text-xs ${
+                          result.fix.validated
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {result.fix.validated
+                          ? "Fix validated"
+                          : "Fix needs review"}
                       </p>
+
                     </div>
                   </div>
                 </>
