@@ -2,8 +2,10 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyc
 node_modules/
 dist/
+backend/.venv/
 
 # Virtual environment
 .venv/
@@ -11,6 +13,7 @@ venv/
 
 # Environment variables
 .env
+backend/.env
 
 # Test / tooling
 .pytest_cache/
@@ -18,3 +21,8 @@ venv/
 
 # IDE
 .vscode/
+
+
+# Node
+node_modules/
+frontend/dist/
