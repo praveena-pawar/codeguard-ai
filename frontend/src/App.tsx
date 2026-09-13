@@ -35,6 +35,8 @@ type AnalysisResult = {
   };
 };
 
+
+
 function formatExplanation(text: string) {
   return text
     .split("\n")
@@ -42,10 +44,11 @@ function formatExplanation(text: string) {
     .filter(Boolean)
     .map((line, index) => {
       const cleaned = line
-        .replace(/^\*\*\d+\.\s*/, "")
+        .replace(/^\*\*\d+\.\*\*\s*/, "")
         .replace(/^\d+\.\s*/, "")
-        .replace(/^\*\s*/, "")
-        .replace(/^-+\s*/, "");
+        .replace(/^\*\*\s*/, "")
+        .replace(/^-+\s*/, "")
+        .replace(/\*\*$/g, "");
 
       const parts = cleaned.split(/\*\*(.*?)\*\*/g);
 
@@ -70,6 +73,7 @@ function formatExplanation(text: string) {
       );
     });
 }
+
 
 function App() {
   const [code, setCode] = useState(defaultCode);
