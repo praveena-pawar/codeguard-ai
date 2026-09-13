@@ -35,7 +35,6 @@ type AnalysisResult = {
   };
 };
 
-
 function formatExplanation(text: string) {
   return text
     .split("\n")
@@ -72,70 +71,64 @@ function formatExplanation(text: string) {
     });
 }
 
-
-
-
 function App() {
   const [code, setCode] = useState(defaultCode);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [error, setError] = useState("");
-  
 
-const analyzeCode = async () => {
-  setLoading(true);
-  setError("");
-  setResult(null);
-  setAnalysisStep(1);
+  const analyzeCode = async () => {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    setAnalysisStep(1);
 
-  const stepTimer1 = setTimeout(() => {
-    setAnalysisStep(2);
-  }, 1500);
+    const stepTimer1 = setTimeout(() => {
+      setAnalysisStep(2);
+    }, 1500);
 
-  const stepTimer2 = setTimeout(() => {
-    setAnalysisStep(3);
-  }, 3500);
+    const stepTimer2 = setTimeout(() => {
+      setAnalysisStep(3);
+    }, 3500);
 
-  const stepTimer3 = setTimeout(() => {
-    setAnalysisStep(4);
-  }, 5500);
+    const stepTimer3 = setTimeout(() => {
+      setAnalysisStep(4);
+    }, 5500);
 
-  try {
-    const response = await fetch("http://localhost:8000/analysis", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ code }),
-    });
+    try {
+      const response = await fetch("http://localhost:8000/analysis", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      });
 
-    if (!response.ok) {
-      throw new Error("Analysis request failed");
+      if (!response.ok) {
+        throw new Error("Analysis request failed");
+      }
+
+      setAnalysisStep(5);
+
+      const data: AnalysisResult = await response.json();
+
+      setResult(data);
+      setAnalysisStep(6);
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        "CodeGuard could not complete the analysis. Check that the backend is running and try again."
+      );
+    } finally {
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer3);
+
+      setLoading(false);
     }
-
-    setAnalysisStep(5);
-
-    const data: AnalysisResult = await response.json();
-
-    setResult(data);
-    setAnalysisStep(6);
-  } catch (err) {
-    console.error(err);
-
-  setError(
-    "CodeGuard could not complete the analysis. Check that the backend is running and try again."
-  );
-  } finally {
-    clearTimeout(stepTimer1);
-    clearTimeout(stepTimer2);
-    clearTimeout(stepTimer3);
-
-    setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -171,7 +164,6 @@ const analyzeCode = async () => {
         {/* TOP SECTION */}
         <div className="grid items-start gap-6 lg:grid-cols-2">
 
-
           {/* SOURCE CODE */}
           <section className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-800 px-5 py-3">
@@ -200,9 +192,6 @@ const analyzeCode = async () => {
               }}
             />
           </section>
-          
-
-
 
           {/* ANALYSIS RESULTS */}
           <section className="space-y-4">
@@ -264,8 +253,6 @@ const analyzeCode = async () => {
                 </div>
               </div>
             )}
-
-
 
             {/* QUALITY SCORE */}
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
@@ -332,7 +319,6 @@ const analyzeCode = async () => {
                       <p className="mt-1 text-xs text-slate-500">
                         Initial quality
                       </p>
-
                     </div>
 
                     <div className="flex flex-col items-center justify-center rounded-lg border border-green-900 bg-green-950/20 p-4 text-center">
@@ -347,7 +333,6 @@ const analyzeCode = async () => {
                       <p className="mt-1 text-xs text-green-400">
                         Quality gained
                       </p>
-
                     </div>
 
                     <div className="rounded-lg border border-cyan-900 bg-cyan-950/20 p-4">
@@ -370,15 +355,11 @@ const analyzeCode = async () => {
                           ? "Fix validated"
                           : "Fix needs review"}
                       </p>
-
                     </div>
                   </div>
                 </>
               )}
             </div>
-
-
-
 
             {/* DETECTED ISSUES */}
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
@@ -429,79 +410,72 @@ const analyzeCode = async () => {
                 </div>
               )}
             </div>
-
-            {/* AI EXPLANATION */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <h3 className="font-semibold">AI Explanation</h3>
-
-              {!result && (
-                <p className="mt-4 text-sm leading-6 text-slate-500">
-                  CodeGuard will explain what went wrong, why it matters, and
-                  how to fix it.
-                </p>
-              )}
-
-
-
-              {result && result.issues.length > 0 && (
-                <div className="mt-4 space-y-5">
-                  {result.issues.map((issue, index) => (
-                    <div
-                      key={index}
-                      className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="text-sm font-semibold text-cyan-400">
-                          {issue.rule}
-                        </span>
-
-                        <span className="text-xs text-slate-500">
-                          Line {issue.line}
-                        </span>
-                      </div>
-
-                      <div className="space-y-2">
-                        {formatExplanation(issue.explanation)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-
-
-              {error && (
-                <div className="mt-4 rounded-lg border border-red-900 bg-red-950/40 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-red-800 text-red-400">
-                      !
-                    </div>
-
-                    <div>
-                      <p className="font-semibold text-red-400">
-                        Analysis failed
-                      </p>
-
-                      <p className="mt-1 text-sm text-red-300/80">
-                        {error}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={analyzeCode}
-                    className="mt-4 rounded-lg border border-red-800 px-4 py-2 text-sm font-medium text-red-400 transition hover:bg-red-950"
-                  >
-                    Try Again
-                  </button>
-                </div>
-              )}
-
-            </div>
           </section>
         </div>
 
+        {/* AI EXPLANATION — FULL WIDTH */}
+        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <h3 className="font-semibold">AI Explanation</h3>
 
+          {!result && (
+            <p className="mt-4 text-sm leading-6 text-slate-500">
+              CodeGuard will explain what went wrong, why it matters, and
+              how to fix it.
+            </p>
+          )}
+
+          {result && result.issues.length > 0 && (
+            <div className="mt-4 space-y-5">
+              {result.issues.map((issue, index) => (
+                <div
+                  key={index}
+                  className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-cyan-400">
+                      {issue.rule}
+                    </span>
+
+                    <span className="text-xs text-slate-500">
+                      Line {issue.line}
+                    </span>
+                  </div>
+
+                  <div className="max-h-32 overflow-y-auto pr-2 space-y-2">
+                    {formatExplanation(issue.explanation)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 rounded-lg border border-red-900 bg-red-950/40 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-red-800 text-red-400">
+                  !
+                </div>
+
+                <div>
+                  <p className="font-semibold text-red-400">
+                    Analysis failed
+                  </p>
+
+                  <p className="mt-1 text-sm text-red-300/80">
+                    {error}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={analyzeCode}
+                className="mt-4 rounded-lg border border-red-800 px-4 py-2 text-sm font-medium text-red-400 transition hover:bg-red-950"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* BEFORE + AFTER CODE */}
         {result && (
@@ -562,7 +536,9 @@ const analyzeCode = async () => {
                   <span className="text-sm font-medium">After</span>
 
                   <span className="text-xs text-green-400">
-                    {result.fix.validated ? "Validated fix" : "Validation failed"}
+                    {result.fix.validated
+                      ? "Validated fix"
+                      : "Validation failed"}
                   </span>
                 </div>
 
@@ -584,9 +560,6 @@ const analyzeCode = async () => {
           </section>
         )}
 
-
-
-
         {/* TESTS + FIX */}
         {result && (
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -600,7 +573,7 @@ const analyzeCode = async () => {
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     result.tests.original.passed
                       ? "border border-green-800 text-green-400"
-                      : "border border-red-800 text-red-400"
+                      : "border border-red-400 text-red-400"
                   }`}
                 >
                   {result.tests.original.passed
@@ -622,9 +595,6 @@ const analyzeCode = async () => {
                   scrollBeyondLastLine: false,
                 }}
               />
-
-
-
 
               <div className="border-t border-slate-800">
                 <div className="grid grid-cols-2">
@@ -692,13 +662,7 @@ const analyzeCode = async () => {
                   </details>
                 </div>
               </div>
-
             </section>
-
-
-
-
-
 
             {/* AI FIX */}
             <section className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
