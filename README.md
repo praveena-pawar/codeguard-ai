@@ -358,9 +358,6 @@ codeguard-ai/
 │   ├── package.json
 │   └── ...
 │
-├── supabase/
-│   └── migrations/
-│
 ├── .dockerignore
 ├── .gitignore
 ├── docker-compose.yml
